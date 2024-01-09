@@ -121,3 +121,5 @@ cython_debug/
 archive/
 
 */.ragatouille
+
+local/

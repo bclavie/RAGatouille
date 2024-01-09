@@ -1,13 +1,14 @@
-from typing import Callable, Optional, Union, List, Any
+from typing import Callable, Optional, Union, Any
 from pathlib import Path
 from langchain_core.retrievers import BaseRetriever
-from langchain_core.documents import Document
-from langchain_core.callbacks.manager import (
-    CallbackManagerForRetrieverRun,
-)
+from langchain.retrievers.document_compressors.base import BaseDocumentCompressor
 from ragatouille.data.corpus_processor import CorpusProcessor
 from ragatouille.data.preprocessors import llama_index_sentence_splitter
 from ragatouille.models import LateInteractionModel, ColBERT
+from ragatouille.integrations import (
+    RAGatouilleLangChainRetriever,
+    RAGatouilleLangChainCompressor,
+)
 
 
 class RAGPretrainedModel:
@@ -190,18 +191,41 @@ class RAGPretrainedModel:
             **kwargs,
         )
 
+    def rerank(
+        self,
+        query: str | list[str],
+        documents: list[str],
+        k: int = 10,
+        zero_index_ranks: bool = False,
+        bsize: int = 64,
+    ):
+        """Re-rank documents via ColBERT. Functionally equivalent to `direct_search()`.
+
+        Parameters:
+            query (Union[str, list[str]]): The query or list of queries to search for.
+            k (int): The number of results to return for each query.
+            zero_index_ranks (bool): Whether to zero the index ranks of the results. By default, result rank 1 is the highest ranked result
+            bsize (int): The batch size to use for re-ranking.
+
+        Returns:
+            results (Union[list[dict], list[list[dict]]]): A list of dict containing individual results for each query. If a list of queries is provided, returns a list of lists of dicts. Each result is a dict with keys `content`, `score` and `rank`.
+
+        Individual results are always in the format:
+        ```python3
+        {"content": "text of the relevant passage", "score": 0.123456, "rank": 1}
+        ```
+        """
+
+        return self.model.rank(
+            query=query,
+            documents=documents,
+            k=k,
+            zero_index_ranks=zero_index_ranks,
+            bsize=bsize,
+        )
+
     def as_langchain_retriever(self, **kwargs: Any) -> BaseRetriever:
         return RAGatouilleLangChainRetriever(model=self, kwargs=kwargs)
 
-
-class RAGatouilleLangChainRetriever(BaseRetriever):
-
-    model: RAGPretrainedModel
-    kwargs: dict = {}
-
-    def _get_relevant_documents(
-            self, query: str, *, run_manager: CallbackManagerForRetrieverRun
-    ) -> List[Document]:
-        """Get documents relevant to a query."""
-        docs = self.model.search(query, **self.kwargs)
-        return [Document(page_content=doc['content']) for doc in docs]
+    def as_langchain_document_compressor(self, **kwargs: Any) -> BaseDocumentCompressor:
+        return RAGatouilleLangChainCompressor(model=self, kwargs=kwargs)

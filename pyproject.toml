@@ -18,6 +18,7 @@ torch = "^2.0.1"
 llama-index = "^0.9.24"
 langchain_core = "^0.1.4"
 colbert-ai = "^0.2.15"
+langchain = "^0.1.0"
 onnx = "^1.15.0"
 
 [tool.poetry.group.dev.dependencies]
