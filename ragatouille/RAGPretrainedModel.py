@@ -2,8 +2,10 @@ from pathlib import Path
 from typing import Any, Callable, List, Literal, Optional, TypeVar, Union
 from uuid import uuid4
 
+from huggingface_hub import hf_hub_download, try_to_load_from_cache
 from langchain.retrievers.document_compressors.base import BaseDocumentCompressor
 from langchain_core.retrievers import BaseRetriever
+from transformers.utils import cached_file
 
 from ragatouille.data.corpus_processor import CorpusProcessor
 from ragatouille.data.preprocessors import llama_index_sentence_splitter
@@ -12,6 +14,7 @@ from ragatouille.integrations import (
     RAGatouilleLangChainRetriever,
 )
 from ragatouille.models import ColBERT, LateInteractionModel
+from ragatouille.models.utils import upload_index_and_model
 
 
 class RAGPretrainedModel:
@@ -47,6 +50,7 @@ class RAGPretrainedModel:
     model_name: Union[str, None] = None
     model: Union[LateInteractionModel, None] = None
     corpus_processor: Optional[CorpusProcessor] = None
+    index_path: Union[Path, None] = None
 
     @classmethod
     def from_pretrained(
@@ -75,25 +79,67 @@ class RAGPretrainedModel:
 
     @classmethod
     def from_index(
-        cls, index_path: Union[str, Path], n_gpu: int = -1, verbose: int = 1
+        cls,
+        index_path: Union[str, Path],
+        n_gpu: int = -1,
+        verbose: int = 1,
+        local_dir: Optional[str] = None,
     ):
         """Load an Index and the associated ColBERT encoder from an existing document index.
 
         Parameters:
-            index_path (Union[str, path]): Path to the index.
+            index_path (Union[str, Path]): Path to the index (eg., ./my-index) or, The Hugging Face repository ID (e.g., 'username/repo').
             n_gpu (int): Number of GPUs to use. By default, value is -1, which means use all available GPUs or none if no GPU is available.
             verbose (int): The level of ColBERT verbosity requested. By default, 1, which will filter out most internal logs.
+            local_dir (Optional[str]): Local directory to download the index to, if not present locally.
 
         Returns:
             cls (RAGPretrainedModel): The current instance of RAGPretrainedModel, with the model and index initialised.
         """
         instance = cls()
-        index_path = Path(index_path)
+
+        # Check if index_path refers to a path or a huggingface model
+        resolved_index_path = cls._resolve_index_path(index_path, local_dir)
+
         instance.model = ColBERT(
-            index_path, n_gpu, verbose=verbose, load_from_index=True
+            resolved_index_path, n_gpu, verbose=verbose, load_from_index=True
         )
 
         return instance
+
+    @staticmethod
+    def _resolve_index_path(
+        index_path: Union[str, Path], local_dir: Optional[str]
+    ) -> Path:
+        """
+        Resolve whether the index_path is a local path or a Hugging Face model identifier.
+
+        Parameters:
+            index_path (Union[str, Path]): The index path or Hugging Face model identifier.
+            local_dir (Optional[str]): The local directory to use for storing the index.
+
+        Returns:
+            Path: The resolved local path to the index.
+        """
+        index_path = Path(index_path)
+        if local_dir is None:
+            local_dir = f".ragatouille/indexes/{str(index_path)}"
+
+        if index_path.is_dir():
+            return index_path
+        else:
+            try:
+                return Path(
+                    hf_hub_download(
+                        repo_id=str(index_path),
+                        filename="indexes/",
+                        cache_dir=local_dir,
+                    )
+                )
+            except Exception as e:
+                raise OSError(
+                    f"Index not found locally or in the Hugging Face hub: {index_path}"
+                ) from e
 
     def _process_metadata(
         self,
@@ -398,3 +444,19 @@ class RAGPretrainedModel:
         self, k: int = 5, **kwargs: Any
     ) -> BaseDocumentCompressor:
         return RAGatouilleLangChainCompressor(model=self, k=k, kwargs=kwargs)
+
+    def upload_to_huggingface_hub(self, huggingface_repo_name: str) -> None:
+        """Upload the given colbert model and"""
+        if not self.model:
+            raise ValueError(
+                "Model is undefined. Specify the model before attempting to upload the index."
+            )
+
+        colbert_path = Path(try_to_load_from_cache(repo_id=self.model_name, filename="config.json")).parent
+        print(colbert_path)
+
+        upload_index_and_model(
+            colbert_path=colbert_path,
+            huggingface_repo_name=huggingface_repo_name,
+            index_path=self.index_path,
+        )

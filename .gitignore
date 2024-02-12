@@ -127,3 +127,5 @@ archive/
 local/
 
 .vscode/
+
+.tmp
