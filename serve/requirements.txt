@@ -1,0 +1,8 @@
+fastapi = "^0.109.2"
+uvicorn = "^0.27.1"
+pydantic = "^2.6.1"
+requests = "^2.31.0"
+starlette = ">=0.36.3,<0.37.0"
+python-multipart = "^0.0.9"
+pydantic-settings = "^2.1.0"
+RAGatouille = "0.0.6rc2"

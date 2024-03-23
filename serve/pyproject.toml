@@ -1,0 +1,24 @@
+[tool.poetry]
+name = "ragatouille_serve"
+version = "0.1.0"
+description = "FastAPI server for ragatouille"
+authors = ["Ram Chandalada"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = ">=3.9,<4.0"
+fastapi = "^0.109.2"
+uvicorn = "^0.27.1"
+pydantic = "^2.6.1"
+requests = "^2.31.0"
+starlette = ">=0.36.3,<0.37.0"
+python-multipart = "^0.0.9"
+pydantic-settings = "^2.1.0"
+RAGatouille = "0.0.6rc2"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.0.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
