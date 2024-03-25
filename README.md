@@ -50,7 +50,7 @@ In this section, we'll quickly walk you through the three core aspects of RAGato
 
 ### 🚀 Training and fine-tuning
 
-_If you're just prototyping, you don't need to train your own model! While finetuning can be useful, one of the strength of ColBERT is that the pretrained models are particularly good at generalisation, and [ColBERTv2](https://huggingface.co/colbert-ir/colbertv2.0) has [repeatedly been shown to be extremely strong](https://arxiv.org/abs/2303.00807) at zero-shot retrieval in new domains!_
+_If you're just prototyping, you don't need to train your own model! While finetuning can be useful, one of the strength of ColBERT is that the pretrained models are particularly good at generalization, and [ColBERTv2](https://huggingface.co/colbert-ir/colbertv2.0) has [repeatedly been shown to be extremely strong](https://arxiv.org/abs/2303.00807) at zero-shot retrieval in new domains!_
 
 #### Data Processing
 
