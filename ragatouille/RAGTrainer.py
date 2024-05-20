@@ -101,7 +101,7 @@ class RAGTrainer:
         """
         if all_documents is not None:
             self.collection += [doc for doc in all_documents if isinstance(doc, str)]
-
+        print(1)
         self.data_dir = Path(data_out_path)
         sample = raw_data[0]
         if len(sample) == 2:
@@ -115,7 +115,7 @@ class RAGTrainer:
                 data_type = "triplets"
         else:
             raise ValueError("Raw data must be a list of pairs or triplets of strings.")
-
+        print(2)
         self.queries = set()
         for x in raw_data:
             if isinstance(x[0], str):
@@ -130,20 +130,20 @@ class RAGTrainer:
 
         self.collection = list(set(self.collection))
         seeded_shuffle(self.collection)
-
+        print(3)
         if mine_hard_negatives:
             self.negative_miner = SimpleMiner(
                 language_code=self.language_code,
                 model_size=hard_negative_model_size,
             )
             self.negative_miner.build_index(self.collection)
-
+        print(4)
         self.data_processor = TrainingDataProcessor(
             collection=self.collection,
             queries=self.queries,
             negative_miner=self.negative_miner if mine_hard_negatives else None,
         )
-
+        print(5)
         self.data_processor.process_raw_data(
             data_type=data_type,
             raw_data=raw_data,
@@ -155,6 +155,7 @@ class RAGTrainer:
             mine_hard_negatives=mine_hard_negatives,
             hard_negative_minimum_rank=hard_negative_minimum_rank,
         )
+        print(6)
         if len(self.data_processor.training_triplets) == 0:
             if mine_hard_negatives:
                 print(
@@ -173,7 +174,7 @@ class RAGTrainer:
                 )
             else:
                 raise ValueError("No training triplets were generated.")
-
+        print(7)
         self.training_triplets = self.data_processor.training_triplets
 
         return data_out_path

@@ -420,3 +420,29 @@ class RAGPretrainedModel:
         self, k: int = 5, **kwargs: Any
     ) -> BaseDocumentCompressor:
         return RAGatouilleLangChainCompressor(model=self, k=k, kwargs=kwargs)
+
+    def evaluate(
+        self,
+        queries: list[str],
+        expected_document_ids: list[list[str]],
+        expected_passage_ids: list[list[int]] = None,
+        metrics: list[str] = None,
+        k: list[int] = None,
+    ) -> dict[str, dict[int, float]]:
+        """Evaluate the model on a set of queries.
+
+        Parameters:
+            queries (list[str]): A list of queries to evaluate the model on.
+            expected_document_ids (list[list[str]]): A list of lists of expected document IDs for each query.
+            expected_passage_ids (list[list[int]]): A list of lists of expected passage IDs for each query. Set to None if documents are not split into passages
+            metrics (list[str]): A list of metrics to evaluate the model on. Valid metrics are "hit_rate", "recall", and "mrr".
+            k (list[int]): The numbers of results to consider for each query in the evaluation.
+
+        Returns:
+            results (dict[str, dict[int, float]]): A nested dictionary containing the evaluation results for each metric and each k.
+        """
+        if not k:
+            k = [10]
+        if not metrics:
+            metrics = ["hit_rate", "recall", "mrr"]
+        return self.model.evaluate(queries, expected_document_ids, expected_passage_ids, metrics, k)

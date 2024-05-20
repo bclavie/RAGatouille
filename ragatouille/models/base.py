@@ -9,8 +9,7 @@ class LateInteractionModel(ABC):
         self,
         pretrained_model_name_or_path: Union[str, Path],
         n_gpu,
-    ):
-        ...
+    ): ...
 
     @abstractmethod
     def train():
@@ -34,4 +33,15 @@ class LateInteractionModel(ABC):
 
     @abstractmethod
     def _batch_search(self, name: str, queries: list[str]):
+        ...
+
+    @abstractmethod
+    def evaluate(
+        self,
+        queries: list[str],
+        expected_document_ids: list[list[str]],
+        expected_passage_ids: list[list[int]],
+        metrics: list[str],
+        k: list[int],
+    ):
         ...
