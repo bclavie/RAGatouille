@@ -554,7 +554,7 @@ class ColBERT(LateInteractionModel):
 
         embedded_queries = self._encode_index_free_queries(query, bsize=bsize)
         embedded_docs, doc_mask = self._encode_index_free_documents(
-            documents, bsize=bsize
+            documents, bsize=bsize, verbose=self.verbose != 0
         )
 
         return self._index_free_search(
